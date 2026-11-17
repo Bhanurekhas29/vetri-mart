@@ -66,6 +66,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # serves the admin's CSS and scripts online
+    'siteconfig.cors.ApiCorsMiddleware',  # lets the web version of the app call /api/ (see siteconfig/cors.py)
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
