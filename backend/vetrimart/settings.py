@@ -116,6 +116,13 @@ if os.environ.get('DB_SSL_CA'):
     DATABASES['default']['OPTIONS']['ssl'] = {'ca': os.environ['DB_SSL_CA']}
 
 
+# TiDB Cloud cannot run one step of the login-token package's (token_blacklist) upgrade history: "add a UNIQUE column
+# to an existing table". With TIDB_COMPAT=True that package uses one ready-made migration (vetrimart/tidb_migrations)
+# that creates its final tables directly. Use it only when creating the tables in TiDB (load-to-tidb.ps1 sets it).
+if os.environ.get('TIDB_COMPAT', 'False') == 'True':
+    MIGRATION_MODULES = {'token_blacklist': 'vetrimart.tidb_migrations.token_blacklist'}
+
+
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
 

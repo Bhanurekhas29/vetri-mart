@@ -34,6 +34,7 @@ $env:DB_USER = $dbUser
 $env:DB_PASSWORD = $dbPassword
 $env:DB_NAME = $dbName
 $env:DB_SSL_CA = $ca
+$env:TIDB_COMPAT = 'True'   # TiDB cannot run one step of the login-token package's history; see vetrimart/tidb_migrations
 
 Write-Host "`n[2/4] Creating the tables in TiDB ..." -ForegroundColor Cyan
 & $py manage.py migrate

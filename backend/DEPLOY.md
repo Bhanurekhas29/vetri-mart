@@ -37,6 +37,7 @@ $env:DB_PASSWORD = "your-tidb-password"
 $env:DB_NAME = "vetrimart"
 $env:DB_SSL_CA = "E:\certs\isrgrootx1.pem"
 $env:PYTHONUTF8 = "1"
+$env:TIDB_COMPAT = "True"   # TiDB cannot run one step of the login-token package's history; use its ready-made migration
 
 venv\Scripts\python manage.py migrate
 ```
