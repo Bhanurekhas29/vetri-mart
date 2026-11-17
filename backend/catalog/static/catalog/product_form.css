@@ -1,0 +1,143 @@
+/* Product form look (admin panel). Follows the approved mockup:
+   numbered sections with a coloured tag, compact cards for versions and pictures, wide boxes.
+   The classes vm-* are added by product_form.js; everything is limited to the product page. */
+
+/* the big box around the whole form: let the sections stand on their own */
+.model-product .col-12.col-lg-9 > .card {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.model-product .col-12.col-lg-9 > .card > .card-body { padding: 0; }
+
+/* the instruction line above the first section */
+.model-product .vm-intro { color: #6b7280; font-size: 13px; margin: 0 0 12px; }
+
+/* ---------- a section: title, tag, help line ---------- */
+.model-product .vm-section {
+  background: #fff;
+  border: 1px solid #e3e6f0;
+  border-radius: 12px;
+  box-shadow: none;
+  margin-bottom: 14px;
+}
+.model-product .vm-section > .card-header,
+.model-product .vm-section > .vm-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border-bottom: 0;
+  padding: 14px 18px 4px;
+}
+.model-product .vm-title { font-size: 16px; font-weight: 600; color: #1b1f2a; }
+.model-product .vm-badge { font-size: 12px; font-weight: 500; padding: 2px 10px; border-radius: 10px; }
+.model-product .vm-required { background: #fdecec; color: #b3261e; }
+.model-product .vm-recommended { background: #fff4e5; color: #b45309; }
+.model-product .vm-optional { background: #e6f4ea; color: #1e8e3e; }
+.model-product .vm-hint { margin-left: auto; font-size: 12px; font-weight: 400; color: #6b7280; }
+.model-product .vm-help { color: #6b7280; font-size: 13px; padding: 0 18px 8px; }
+.model-product .vm-section > .card-body { padding: 8px 18px 16px; }
+
+/* ---------- section 1: label beside a wide box ---------- */
+.model-product .vm-section-1 .form-group .row > .col-sm-3 { flex: 0 0 130px; width: 130px; max-width: 130px; color: #6b7280; }
+.model-product .vm-section-1 .form-group .row > .col-sm-9 { flex: 1 1 0; width: auto; max-width: calc(100% - 130px); }
+.model-product .vm-section-1 input[type="text"],
+.model-product .vm-section-1 textarea { width: 100%; max-width: 640px; }
+.model-product .vm-section-1 .select2-container { width: 100% !important; max-width: 640px; }
+
+/* the theme draws a second boxed card around each group of blocks: flatten it, so there is no box inside a box */
+.model-product .vm-section .inline-group > fieldset.module {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+.model-product .vm-section .inline-group > fieldset.module > .card-body { padding: 0; }
+
+/* number boxes (price, MRP, stock) look like the text boxes */
+.model-product #product_form input[type="number"] {
+  display: block;
+  width: 100%;
+  height: 38px;
+  padding: 6px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background: #fff;
+  color: #1b1f2a;
+}
+
+/* ---------- sections 2 and 3: each version / picture is a compact card, boxes in a grid, labels above ---------- */
+.model-product .vm-section-2 .inline-related > .card,
+.model-product .vm-section-3 .inline-related > .card {
+  border: 1px solid #e3e6f0;
+  border-top: 1px solid #e3e6f0;
+  border-radius: 8px;
+  box-shadow: none;
+  margin-bottom: 6px;
+}
+.model-product .vm-section-2 .inline-related .card-header,
+.model-product .vm-section-3 .inline-related .card-header {
+  background: transparent;
+  border-bottom: 0;
+  padding: 10px 14px 0;
+}
+.model-product .vm-block-title { font-size: 14px; font-weight: 600; color: #1b1f2a; }
+.model-product .vm-section-2 .inline-related .card-tools,
+.model-product .vm-section-3 .inline-related .card-tools { display: none; }
+
+.model-product .vm-section-2 .inline-related .card-body,
+.model-product .vm-section-3 .inline-related .card-body {
+  display: grid;
+  gap: 10px 14px;
+  padding: 10px 14px 14px;
+}
+.model-product .vm-section-2 .inline-related .card-body { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.model-product .vm-section-3 .inline-related .card-body { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.model-product .vm-section-2 .field-is_active,
+.model-product .vm-section-3 .field-image,
+.model-product .vm-section-3 .field-preview,
+.model-product .vm-section-3 .field-alt_text { grid-column: 1 / -1; }
+
+.model-product .vm-section-2 .inline-related .form-group,
+.model-product .vm-section-3 .inline-related .form-group { margin: 0; }
+.model-product .vm-section-2 .inline-related .form-group .row,
+.model-product .vm-section-3 .inline-related .form-group .row { display: block; margin: 0; }
+.model-product .vm-section-2 .inline-related .form-group .row > *,
+.model-product .vm-section-3 .inline-related .form-group .row > * {
+  flex: none; width: 100%; max-width: 100%; padding-left: 0; padding-right: 0;
+}
+.model-product .vm-section-2 .inline-related label,
+.model-product .vm-section-3 .inline-related label {
+  display: block; font-size: 12px; font-weight: 400; color: #6b7280; margin-bottom: 2px;
+}
+.model-product .vm-section-2 .inline-related input:not([type="checkbox"]):not([type="file"]),
+.model-product .vm-section-3 .inline-related input:not([type="checkbox"]):not([type="file"]) { width: 100%; }
+.model-product .vm-section-2 .inline-related .select2-container,
+.model-product .vm-section-3 .inline-related .select2-container { width: 100% !important; }
+
+/* help text under a box: small and quiet */
+.model-product .vm-section-2 .inline-related .help-block,
+.model-product .vm-section-3 .inline-related .help-block { font-size: 11px; color: #6b7280; margin-top: 2px; }
+
+/* "Remove" and "Add another" */
+.model-product .vm-section .inline-deletelink { color: #d93025; font-size: 13px; }
+.model-product .vm-section .add-row { padding: 4px 2px 0; }
+.model-product .vm-section .add-row a.addlink {
+  float: none;
+  border: 0;
+  background: transparent;
+  color: #0b1f4b;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 2px 0;
+}
+
+/* ---------- section 4: just Name and Value ---------- */
+.model-product .vm-section-4 table { width: 100%; }
+.model-product .vm-section-4 th { font-size: 12px; font-weight: 500; color: #6b7280; }
+.model-product .vm-section-4 input[type="text"] { width: 100%; }
+
+/* ---------- the folded Extras box ---------- */
+.model-product .vm-extras > .vm-section-header { cursor: pointer; }

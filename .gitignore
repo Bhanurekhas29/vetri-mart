@@ -1,0 +1,27 @@
+# Secrets and local files: never in git
+.env
+*.env.local
+backend/.env
+frontend/.env
+
+# Python
+backend/venv/
+__pycache__/
+*.pyc
+db.sqlite3
+
+# Django
+backend/media/
+backend/staticfiles/
+
+# Node / Expo
+node_modules/
+.expo/
+dist/
+
+# Editor and tool folders
+.qodo/
+.claude/
+
+# Data exports (they contain customer data)
+data*.json

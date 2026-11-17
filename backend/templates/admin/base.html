@@ -1,0 +1,160 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% comment %}
+Same as the theme's footer, but shows the credits line from the Brand screen instead of the theme version.
+{% endcomment %}
+{% block footer %}
+    {% if not is_popup %}
+        <footer class="app-footer {{ jazzmin_ui.footer_classes }}">
+            {% if brand and brand.credits_text %}
+                <div class="float-end d-none d-sm-inline">
+                    {% if brand.credits_url %}
+                        <a href="{{ brand.credits_url }}" target="_blank" rel="noopener">{{ brand.credits_text }}</a>
+                    {% else %}
+                        {{ brand.credits_text }}
+                    {% endif %}
+                </div>
+            {% endif %}
+            <strong>{% trans 'Copyright' %} &copy; {% now 'Y' %} {{ jazzmin_settings.copyright }}.</strong> {% trans 'All rights reserved.' %}
+        </footer>
+    {% endif %}
+{% endblock %}
+
+{% comment %}
+Top bar extras: a bell (what needs attention) and a tidier account menu with a clear Log out button.
+The markup is drawn here by Django and moved into the theme's top bar by the script below.
+{% endcomment %}
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .vm-bell { position: relative; }
+  .vm-bell .vm-badge { position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; padding: 0 5px;
+    border-radius: 9px; background: #d93025; color: #fff; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; }
+  .vm-menu { min-width: 320px; padding: 0; border-radius: 12px; overflow: hidden; }
+  .vm-menu-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; font-weight: 600; border-bottom: 1px solid rgba(0,0,0,.08); }
+  .vm-markread { border: 0; background: transparent; color: #0b1f4b; font-size: 12px; font-weight: 700; padding: 2px 0; cursor: pointer; text-decoration: underline; }
+  .vm-new { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 8px; background: #f57c00; color: #fff; font-size: 11px; font-weight: 700; }
+  .vm-newdot { display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; background: #f57c00; }
+  .vm-alert-count.vm-old { background: #9ca3af; }
+  .vm-alert-row { display: flex; align-items: center; gap: 12px; padding: 10px 16px; color: inherit; text-decoration: none; }
+  .vm-alert-row:hover { background: rgba(0,0,0,.04); color: inherit; }
+  .vm-alert-icon { width: 34px; height: 34px; border-radius: 50%; background: #e8ecf7; color: #0b1f4b;
+    display: inline-flex; align-items: center; justify-content: center; flex: none; }
+  .vm-alert-count { margin-left: auto; background: #d93025; color: #fff; border-radius: 10px; font-size: 12px; font-weight: 700; padding: 1px 8px; }
+  .vm-sub { padding: 6px 16px 2px; font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: .04em; }
+  .vm-q { display: block; padding: 6px 16px; color: inherit; text-decoration: none; font-size: 13px; }
+  .vm-q:hover { background: rgba(0,0,0,.04); color: inherit; }
+  .vm-q small { display: block; color: #6b7280; }
+  .vm-empty { padding: 22px 16px; text-align: center; color: #6b7280; }
+  .vm-user-link { display: flex; align-items: center; gap: 8px; }
+  .vm-avatar { width: 32px; height: 32px; border-radius: 50%; background: #0b1f4b; color: #fff; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 14px; }
+  .vm-usermenu { min-width: 260px; padding: 0; border-radius: 12px; overflow: hidden; }
+  .vm-user-head { display: flex; align-items: center; gap: 12px; padding: 16px; background: #0b1f4b; color: #fff; }
+  .vm-user-head .vm-avatar { width: 44px; height: 44px; font-size: 18px; background: #f57c00; }
+  .vm-user-head small { display: block; opacity: .8; }
+  .vm-usermenu .dropdown-item { padding: 10px 16px; }
+  .vm-logout { width: 100%; text-align: left; color: #d93025; font-weight: 600; border: 0; background: transparent; }
+  .vm-logout:hover { background: #fdecec; color: #d93025; }
+</style>
+{% endblock %}
+
+{% block extrajs %}
+{{ block.super }}
+{% if request.user.is_authenticated and request.user.is_staff and not is_popup %}
+<template id="vm-bell-template">
+  <li class="nav-item dropdown vm-bell">
+    <a class="nav-link btn" data-bs-toggle="dropdown" href="#" title="Notifications" aria-label="Notifications{% if admin_alerts.new_total %}: {{ admin_alerts.new_total }} new{% elif admin_alerts.waiting_total %}: {{ admin_alerts.waiting_total }} waiting{% endif %}">
+      <i class="far fa-bell" aria-hidden="true"></i>
+      {% if admin_alerts.new_total %}<span class="vm-badge">{{ admin_alerts.badge }}</span>{% endif %}
+    </a>
+    <div class="dropdown-menu dropdown-menu-end vm-menu">
+      <div class="vm-menu-head">
+        <span>Needs your attention</span>
+        {% if admin_alerts.new_total %}<button type="button" class="vm-markread" data-url="{{ admin_alerts.mark_read_url }}">Mark all as read</button>{% endif %}
+      </div>
+      {% if admin_alerts.items %}
+        {% for item in admin_alerts.items %}
+          <a class="vm-alert-row" href="{{ item.url }}">
+            <span class="vm-alert-icon"><i class="{{ item.icon }}"></i></span>
+            <span>{{ item.label }}{% if item.new %}<span class="vm-new">{{ item.new }} new</span>{% endif %}</span>
+            <span class="vm-alert-count{% if not item.new %} vm-old{% endif %}">{{ item.count }}</span>
+          </a>
+        {% endfor %}
+        {% if admin_alerts.latest_questions %}
+          <div class="vm-sub">Latest questions</div>
+          {% for q in admin_alerts.latest_questions %}
+            <a class="vm-q" href="{{ q.url }}">{% if q.is_new %}<span class="vm-newdot"></span>{% endif %}{{ q.text }}<small>{{ q.product }}</small></a>
+          {% endfor %}
+        {% endif %}
+      {% else %}
+        <div class="vm-empty"><i class="far fa-check-circle fa-2x mb-2"></i><br>All caught up. Nothing needs you right now.</div>
+      {% endif %}
+    </div>
+  </li>
+</template>
+
+<template id="vm-user-template">
+  <a class="nav-link btn vm-user-link" data-bs-toggle="dropdown" href="#" title="{{ request.user }}">
+    <span class="vm-avatar">{{ request.user.name|default:request.user.email|default:request.user.get_username|slice:":1"|upper }}</span>
+    <span class="d-none d-md-inline">{{ request.user.name|default:request.user.email }}</span>
+  </a>
+  <div class="dropdown-menu dropdown-menu-end vm-usermenu">
+    <div class="vm-user-head">
+      <span class="vm-avatar">{{ request.user.name|default:request.user.email|default:request.user.get_username|slice:":1"|upper }}</span>
+      <div>
+        <strong>{{ request.user.name|default:request.user.email }}</strong>
+        <small>{% if request.user.is_superuser %}Administrator{% else %}Staff{% endif %}</small>
+      </div>
+    </div>
+    <a href="{% url 'admin:password_change' %}" class="dropdown-item"><i class="fas fa-key me-2"></i> Change password</a>
+    <div class="dropdown-divider m-0"></div>
+    <form method="post" action="{% url 'admin:logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="dropdown-item vm-logout"><i class="fas fa-sign-out-alt me-2"></i> Log out</button>
+    </form>
+  </div>
+</template>
+
+<script>
+(function () {
+  var bar = document.querySelector('#jazzy-navbar .navbar-nav.ms-auto');
+  var bell = document.getElementById('vm-bell-template');
+  var userTpl = document.getElementById('vm-user-template');
+  if (!bar || !bell || !userTpl) return;
+
+  // the account menu is the last item of the right side of the top bar
+  var userItem = document.getElementById('jazzy-usermenu');
+  userItem = userItem && userItem.closest('li');
+  var bellItem = bell.content.cloneNode(true);
+  if (userItem) {
+    userItem.innerHTML = '';
+    userItem.appendChild(userTpl.content.cloneNode(true));
+    bar.insertBefore(bellItem, userItem);
+  } else {
+    bar.appendChild(bellItem);
+  }
+
+  // "Mark all as read": tell the server, then clear the red number and the "new" tags (nothing is hidden or resolved)
+  var button = document.querySelector('.vm-bell .vm-markread');
+  if (button) {
+    button.addEventListener('click', function (event) {
+      event.stopPropagation(); // keep the menu open
+      var tokenInput = document.querySelector('input[name=csrfmiddlewaretoken]');
+      var cookie = (document.cookie.match(/(?:^|; )csrftoken=([^;]+)/) || [])[1];
+      var token = tokenInput ? tokenInput.value : cookie || '';
+      button.disabled = true;
+      fetch(button.getAttribute('data-url'), { method: 'POST', credentials: 'same-origin', headers: { 'X-CSRFToken': token } })
+        .then(function (response) {
+          if (!response.ok) throw new Error('failed');
+          document.querySelectorAll('.vm-bell .vm-badge, .vm-bell .vm-new, .vm-bell .vm-newdot, .vm-bell .vm-markread').forEach(function (el) { el.remove(); });
+          document.querySelectorAll('.vm-bell .vm-alert-count').forEach(function (el) { el.classList.add('vm-old'); });
+        })
+        .catch(function () { button.disabled = false; button.textContent = 'Could not save. Try again'; });
+    });
+  }
+})();
+</script>
+{% endif %}
+{% endblock %}

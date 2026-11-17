@@ -1,0 +1,46 @@
+# Render "Blueprint": tells Render how to build and run the Vetri Mart backend (free plan).
+# Secrets are marked `sync: false`: Render asks for them on the dashboard, they are never stored in git.
+services:
+  - type: web
+    name: vetrimart-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: gunicorn vetrimart.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 60
+    healthCheckPath: /api/v1/health/
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.5
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_HTTPS
+        value: "True"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: .onrender.com
+      - key: DJANGO_CSRF_TRUSTED_ORIGINS
+        value: https://*.onrender.com
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      # Pictures live in the database, because the free disk is wiped on every restart
+      - key: MEDIA_IN_DATABASE
+        value: "True"
+      # TiDB Cloud (encrypted connection; this is the CA list that comes with the server)
+      - key: DB_SSL_CA
+        value: /etc/ssl/certs/ca-certificates.crt
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "4000"
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      # Must be the same key as on your laptop, or saved secrets (Razorpay) cannot be read
+      - key: SETTINGS_ENCRYPTION_KEY
+        sync: false
+      # Brevo: emails (OTP, order updates) are sent through its web API, because SMTP is blocked on the free plan
+      - key: BREVO_API_KEY
+        sync: false
