@@ -271,6 +271,18 @@ JAZZMIN_SETTINGS = LiveJazzminSettings({
 
 
 
+# Errors go to the console, so the host's log page (Render > Logs) shows the full reason for a 500 error.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {'console': {'class': 'logging.StreamHandler'}},
+    'loggers': {
+        'django.request': {'handlers': ['console'], 'level': 'ERROR', 'propagate': False},
+    },
+    'root': {'handlers': ['console'], 'level': 'WARNING'},
+}
+
+
 # Custom user: the verified email is the login
 AUTH_USER_MODEL = 'accounts.User'
 

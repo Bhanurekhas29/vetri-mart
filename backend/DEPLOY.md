@@ -19,6 +19,14 @@ Secrets (passwords, keys) are typed on the Render dashboard. They are never in g
 
 ## 2. Load your data into TiDB (from your laptop, once)
 
+**Easy way:** in PowerShell, in the `backend` folder, run the script below. It asks for the TiDB details (the password is typed hidden), then exports your local data, creates the tables in TiDB, loads the data and saves the pictures.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\load-to-tidb.ps1
+```
+
+**Manual way** (same steps, if you prefer to see each one):
+
 Open PowerShell in the `backend` folder. The variables below only last for this window and are not written anywhere:
 
 ```powershell
