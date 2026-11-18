@@ -228,6 +228,20 @@ export type CartLine = {
   low_stock: boolean; // 5 or fewer left
   issue: CartIssue; // set when this line blocks Place order
   price_dropped_from: string | null; // set when cheaper now than when it was added
+  added_at: string | null; // when it was put in the cart (null for a guest's phone cart): used for the "cart is waiting" reminder
+};
+
+// One line of "Available offers" in the cart (a coupon the admin ticked "Show in app").
+export type CouponOffer = {
+  code: string;
+  title: string; // the admin's short line, or one written from the numbers
+  detail: string; // for example "10% off up to ₹100 on orders above ₹299"
+  min_order_amount: string;
+  valid_until: string;
+  eligible: boolean | null; // null for a guest: they must log in first
+  reason: string; // why it cannot be used on this cart, when eligible is false
+  discount: string | null; // what it would save on this cart
+  applied: boolean;
 };
 
 export type CartSummary = {

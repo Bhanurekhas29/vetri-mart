@@ -52,8 +52,9 @@ const REQUIRED: { key: keyof FormState; message: string }[] = [
 
 // The screen loads the saved address first (when editing), then shows the form already filled in.
 export default function AddressFormScreen() {
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  const { id, pincode } = useLocalSearchParams<{ id?: string; pincode?: string }>();
   const isEdit = !!id;
+  const startPincode = pincode && /^\d{6}$/.test(pincode) ? pincode : ''; // sent by Checkout: the delivery pincode chosen on Home
 
   const { data: existing, isLoading } = useQuery({
     queryKey: ['address', id],
@@ -69,7 +70,7 @@ export default function AddressFormScreen() {
     );
   }
 
-  return <AddressForm id={id} initial={existing ? toFormState(existing) : EMPTY} />;
+  return <AddressForm id={id} initial={existing ? toFormState(existing) : { ...EMPTY, pincode: startPincode }} />;
 }
 
 function toFormState(address: Address): FormState {

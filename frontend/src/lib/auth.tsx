@@ -131,7 +131,9 @@ export function setPostLoginRoute(path: string | null) {
 export function finishAuth() {
   const back = postLoginRoute && Date.now() - postLoginRoute.at < 10 * 60 * 1000 ? postLoginRoute.path : null;
   postLoginRoute = null;
-  if (router.canDismiss()) router.dismissAll();
-  router.replace('/(tabs)');
+  // Go straight back to the app in ONE move. (Closing the login screens one after another could show a screen from
+  // earlier in the stack, such as the code screen, for a moment.)
+  if (router.canDismiss()) router.dismissTo('/(tabs)');
+  else router.replace('/(tabs)');
   if (back) router.push(back);
 }

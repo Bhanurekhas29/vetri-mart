@@ -23,8 +23,9 @@ export type PaymentMessage =
 export const isTestMode = (block: RazorpayBlock) => block.key_id.startsWith('rzp_test_');
 
 // In test mode the page offers cards, net banking and wallets only: each ends on Razorpay's mock bank page with Success and
-// Failure buttons. UPI is left out because "enter a UPI ID" (collect) is no longer allowed on Android, and a real UPI app
-// cannot complete a test payment. With live keys Razorpay's normal page is used, including UPI.
+// Failure buttons. UPI is left out: a real UPI app cannot complete a test payment, and Razorpay no longer offers "enter a
+// UPI ID" (collect) on Android (tried again on 18 Nov 2026 with success@razorpay: the option did not appear).
+// With live keys Razorpay's normal page is used, including UPI.
 const TEST_MODE_METHODS = {
   display: {
     blocks: {

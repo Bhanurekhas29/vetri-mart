@@ -471,3 +471,24 @@ Suggested by Claude, not decided yet: install Node 22 LTS (lets Expo reload by i
 - **Rule change (asked and agreed): online, pictures are kept in the database** (`MEDIA_IN_DATABASE=True`, `siteconfig.MediaFile`), because Render's free disk is wiped on restart and no cloud picture service is to be used. On the laptop pictures stay in `backend/media`.
 - **Emails online go through Brevo's web API** (`BREVO_API_KEY`), because Render's free plan blocks SMTP. On the laptop, Gmail SMTP from Admin → Email settings is unchanged.
 - Render's free service sleeps after 15 minutes idle; a free uptime monitor on `/api/v1/health/` keeps it awake.
+
+
+### Checkout address vs Home pincode (17 Nov 2026)
+- The pincode chosen on Home and the saved checkout address are different things: changing Home never edits a saved address.
+- Checkout now (a) picks a saved address in the Home pincode automatically, unless the shopper chose an address by hand, and (b) when the selected address is in another pincode, shows a note with "Add address for <Home pincode>" (opens the address form with that pincode filled in) and "Use <address pincode> instead" (sets the Home pincode to the address's).
+- All 2,040 Tamil Nadu pincodes are in Serviceable pincodes (`manage.py import_pincodes`; Chennai 600xxx 2 to 3 days, others 3 to 5). For the live database use `backend/run-on-tidb.ps1 import_pincodes`.
+- Web version of the app (browser demo): CORS added for /api/ only; `app.json` web output set to "single". Not finished or tested yet.
+
+
+### Coupon offers, cart reminder, login fix, order emails (18 Nov 2026)
+- **Available offers:** a coupon has "Show in app" and a short "Description" (Admin > Orders > Coupons). The cart's coupon box lists them (`GET /api/v1/coupons/available/`): usable ones show the saving and an Apply button, others show why not (for example "Add Rs 200 more"), used or fully claimed ones are hidden, guests see them with "Log in". The **minimum order amount** is the existing "Min order amount" field of each coupon (items total after bundle savings, before delivery).
+- **Cart is waiting:** Home shows one friendly line when a logged-in shopper's cart item is more than 24 hours old (cart items now carry `added_at`); after View cart or close it stays quiet for 3 days. In-app only: no push, no email yet.
+- **Login flash:** `finishAuth` closes the login screens in one move (`dismissTo`), and double taps on Send OTP and Log in are ignored. Cause of the flash was not reproduced here: to be confirmed on the phone.
+- **Order emails:** order confirmed, shipped, delivered, cancelled and refund emails are branded HTML with a text copy; online they are sent in a background thread.
+- **Pincodes:** Tamil Nadu only for now (2,040). All-India later.
+
+## Later list, additions (18 Nov 2026)
+- All-India pincodes (the data file is ready; load with `import_pincodes --file`, delivery days by distance).
+- WhatsApp messages for order placed and cancelled (skipped for the demo: needs a Meta business account, approved templates and customer consent).
+- Real push notification and an email reminder for the waiting cart (needs push set-up and a daily timer).
+- Razorpay: UPI ID entry is not offered on Android in test mode; with live keys UPI works normally. Net banking test failed once ("Please use another method"): check Netbanking is enabled in the Razorpay dashboard.

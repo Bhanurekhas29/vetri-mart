@@ -4,7 +4,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, Stack, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -15,6 +15,7 @@ import { Colors, FontSize, Radius, Spacing } from '@/constants/theme';
 import { api, getErrorMessage } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { formatRupees } from '@/lib/format';
+import { usePincode } from '@/lib/pincode';
 import type { PlaceOrderResult } from '@/lib/razorpay';
 import type { Address, CheckoutSummary } from '@/lib/types';
 
@@ -29,6 +30,8 @@ export default function CheckoutScreen() {
   const [addressId, setAddressId] = useState<number | null>(null); // null = the default address
   const [pickerOpen, setPickerOpen] = useState(false);
   const [paying, setPaying] = useState(false);
+  const [userPicked, setUserPicked] = useState(false); // true once the shopper chose an address by hand: then we never switch it for them
+  const { pincode: homePin, setPincode } = usePincode(); // the delivery pincode chosen on Home
 
   const summaryQuery = useQuery({
     queryKey: ['checkout', addressId],
@@ -40,6 +43,17 @@ export default function CheckoutScreen() {
     enabled: status === 'signedIn',
     queryFn: async () => (await api.get<Address[]>('addresses/')).data,
   });
+
+  // If the shopper has a saved address in the pincode chosen on Home, and the selected address is in another one,
+  // switch to the matching address (unless they picked an address by hand).
+  const summaryLoaded = !!summaryQuery.data;
+  const currentPin = summaryQuery.data?.address?.pincode;
+  const savedAddresses = addressesQuery.data;
+  useEffect(() => {
+    if (userPicked || !homePin || !savedAddresses || !summaryLoaded || currentPin === homePin) return;
+    const match = savedAddresses.find((a) => a.pincode === homePin);
+    if (match && match.id !== addressId) setAddressId(match.id);
+  }, [userPicked, homePin, savedAddresses, summaryLoaded, currentPin, addressId]);
 
   // coming back from the cart or from adding an address: look again
   useFocusEffect(
@@ -83,6 +97,13 @@ export default function CheckoutScreen() {
   const { summary, address, delivery } = data;
   const freeDelivery = Number(summary.delivery_fee) === 0;
   const shown = data.items.slice(0, 4);
+  // The pincode on Home and the pincode of the chosen address are different: say so, so the order goes to the right place.
+  const mismatch = !!homePin && !!address && address.pincode !== homePin;
+
+  function addAddressForHomePincode() {
+    setUserPicked(false); // after saving, the new address (same pincode as Home) is picked automatically
+    router.push({ pathname: '/addresses/form', params: homePin ? { pincode: homePin } : {} });
+  }
 
   async function pay() {
     if (!address || paying) return;
@@ -122,6 +143,17 @@ export default function CheckoutScreen() {
               <Text style={styles.addressText}>{addressLines(address)}</Text>
               <Text style={styles.addressText}>Phone: {address.phone}</Text>
               {delivery && <Text style={[styles.delivery, delivery.deliverable ? styles.good : styles.bad]}>{delivery.message}</Text>}
+              {mismatch && (
+                <View style={styles.mismatch} accessibilityRole="alert">
+                  <Text style={styles.mismatchText}>
+                    The delivery pincode on Home is <Text style={styles.mismatchBold}>{homePin}</Text>, but this address is in <Text style={styles.mismatchBold}>{address.pincode}</Text>. Please check, so your order goes to the right place.
+                  </Text>
+                  <Button title={`Add address for ${homePin}`} onPress={addAddressForHomePincode} style={styles.mismatchButton} />
+                  <Pressable onPress={() => setPincode(address.pincode)} hitSlop={8} accessibilityRole="button" accessibilityLabel={`Use ${address.pincode} as the delivery pincode instead`} style={styles.mismatchLinkWrap}>
+                    <Text style={styles.link}>Use {address.pincode} instead</Text>
+                  </Pressable>
+                </View>
+              )}
             </>
           ) : (
             <Text style={styles.note}>You have no saved address yet. Add one to continue.</Text>
@@ -185,12 +217,13 @@ export default function CheckoutScreen() {
         addresses={addressesQuery.data ?? []}
         selectedId={address?.id ?? null}
         onPick={(id) => {
+          setUserPicked(true);
           setAddressId(id);
           setPickerOpen(false);
         }}
         onAdd={() => {
           setPickerOpen(false);
-          router.push('/addresses/form');
+          addAddressForHomePincode();
         }}
         onClose={() => setPickerOpen(false)}
       />
@@ -253,6 +286,11 @@ const styles = StyleSheet.create({
   delivery: { marginTop: Spacing.sm, fontSize: FontSize.body + 1, fontWeight: '600' },
   good: { color: Colors.success },
   bad: { color: Colors.error },
+  mismatch: { backgroundColor: Colors.navySoft, borderRadius: Radius.md, padding: Spacing.md, marginTop: Spacing.md },
+  mismatchText: { fontSize: FontSize.body, color: Colors.text, lineHeight: 20 },
+  mismatchBold: { fontWeight: '700' },
+  mismatchButton: { marginTop: Spacing.md },
+  mismatchLinkWrap: { alignSelf: 'center', marginTop: Spacing.md },
   thumbs: { flexDirection: 'row', alignItems: 'center', marginTop: Spacing.sm },
   thumb: { width: 56, height: 56, borderRadius: Radius.md, marginRight: Spacing.sm },
   more: { fontSize: FontSize.body, color: Colors.textMuted },

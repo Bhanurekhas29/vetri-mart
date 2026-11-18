@@ -17,6 +17,7 @@ export default function PasswordLoginScreen() {
   const [loading, setLoading] = useState(false);
 
   const login = async () => {
+    if (loading) return; // a second tap or the keyboard's Enter key must not log in twice
     setError('');
     if (!email.trim() || !password) {
       setError('Enter your email and password.');

@@ -8,6 +8,7 @@ import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native
 import { AnnouncementBar } from '@/components/home/announcement-bar';
 import { BannerCarousel } from '@/components/home/banner-carousel';
 import { Button } from '@/components/button';
+import { CartReminder } from '@/components/home/cart-reminder';
 import { CategoryStrip } from '@/components/home/category-strip';
 import { DealSection } from '@/components/home/deal-section';
 import { HomeHeader } from '@/components/home/home-header';
@@ -40,6 +41,7 @@ export default function HomeScreen() {
       <HomeHeader />
       <PincodeBar />
       <AnnouncementBar messages={data?.announcements ?? []} speed={data?.announcement_speed} />
+      <CartReminder />
 
       {isLoading ? (
         <ScrollView scrollEnabled={false}>

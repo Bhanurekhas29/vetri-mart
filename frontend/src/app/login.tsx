@@ -21,6 +21,7 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
 
   const sendCode = async () => {
+    if (loading) return; // a second tap or the keyboard's Enter key must not open the code screen twice
     const value = email.trim().toLowerCase();
     setError('');
     if (!EMAIL_PATTERN.test(value)) {
