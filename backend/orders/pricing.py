@@ -81,6 +81,56 @@ def find_coupon(code):
     return Coupon.objects.filter(code=code).first() if code else None
 
 
+def _num(value):
+    value = Decimal(value)
+    return f'{value:,.0f}' if value == value.to_integral_value() else f'{value:,.2f}'
+
+
+def describe_coupon(coupon):
+    """What the coupon gives, in words, for example "10% off up to ₹100 on orders above ₹299"."""
+    if coupon.kind == Coupon.Kind.PERCENT:
+        text = f'{_num(coupon.value)}% off'
+        if coupon.max_discount is not None:
+            text += f' up to ₹{_num(coupon.max_discount)}'
+    else:
+        text = f'₹{_num(coupon.value)} off'
+    if coupon.min_order_amount > 0:
+        text += f' on orders above ₹{_num(coupon.min_order_amount)}'
+    return text
+
+
+def available_offers(user, base):
+    """The coupons the shopper may see in the cart: active, ticked "show in app", inside their dates and not fully claimed.
+    Logged in: ones they already used are left out, and each says whether it works for this cart and how much it saves.
+    A guest (user is None) sees them all, with eligible = None (they have to log in first)."""
+    now = timezone.now()
+    offers = []
+    for coupon in Coupon.objects.filter(is_active=True, show_in_app=True, valid_from__lte=now, valid_until__gte=now).order_by('code'):
+        paid = Order.objects.filter(coupon=coupon, status__in=PAID_STATUSES)
+        if coupon.usage_limit is not None and paid.count() >= coupon.usage_limit:
+            continue
+        offer = {
+            'code': coupon.code,
+            'title': coupon.description.strip() or describe_coupon(coupon),
+            'detail': describe_coupon(coupon),
+            'min_order_amount': str(coupon.min_order_amount),
+            'valid_until': coupon.valid_until.isoformat(),
+            'eligible': None,
+            'reason': '',
+            'discount': None,
+        }
+        if user is not None:
+            if paid.filter(user=user).exists():
+                continue  # already used: no point showing it
+            discount, error, message = check_coupon(coupon, user, base)
+            offer['eligible'] = error is None
+            offer['reason'] = message
+            offer['discount'] = str(discount) if error is None else None
+        offers.append(offer)
+    offers.sort(key=lambda o: (o['eligible'] is False, -Decimal(o['discount'] or 0), o['code']))
+    return offers
+
+
 def check_coupon(coupon, user, base):
     """Can this shopper use this coupon on an items total of `base`?
     Returns (discount, error code, message): the discount is 0 and the code and message are set when it cannot be used."""

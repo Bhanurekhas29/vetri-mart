@@ -431,6 +431,24 @@ class InvoicePdfView(APIView):
         return response
 
 
+class AvailableCouponsView(APIView):
+    """The coupons shoppers may see in the cart ("Available offers"). Open to guests, who see them without a verdict;
+    a logged-in shopper also sees whether each works on their cart and how much it saves. Which coupons are listed is the
+    admin's choice (Orders > Coupons > "Show in app")."""
+
+    permission_classes = [AllowAny]
+
+    @extend_schema(responses=OpenApiTypes.OBJECT, tags=['Cart'])
+    def get(self, request):
+        user = request.user if request.user.is_authenticated else None
+        base = Decimal(build_cart(user, request)['summary']['items_total']) if user else Decimal('0')
+        applied = CartCoupon.objects.filter(user=user).values_list('coupon__code', flat=True).first() if user else None
+        offers = pricing.available_offers(user, base)
+        for offer in offers:
+            offer['applied'] = offer['code'] == applied
+        return Response({'offers': offers})
+
+
 class CouponCodeSerializer(serializers.Serializer):
     code = serializers.CharField(max_length=30)
 

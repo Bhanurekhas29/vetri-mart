@@ -93,11 +93,21 @@ class Coupon(models.Model):
     kind = models.CharField(max_length=10, choices=Kind.choices)
     value = models.DecimalField(max_digits=10, decimal_places=2, validators=POSITIVE)
     max_discount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text='Cap for percent coupons.')
-    min_order_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    min_order_amount = models.DecimalField(
+        max_digits=10, decimal_places=2, default=Decimal('0.00'),
+        help_text='Minimum items total (after bundle savings, before delivery) needed to use this coupon. 0 means no minimum.',
+    )
     valid_from = models.DateTimeField()
     valid_until = models.DateTimeField()
     usage_limit = models.PositiveIntegerField(null=True, blank=True, help_text='Total uses allowed. Blank for unlimited.')
     is_active = models.BooleanField(default=True)
+    show_in_app = models.BooleanField(
+        default=False, help_text='Tick to list this coupon under "Available offers" in the shopper\'s cart. Leave unticked for secret codes.'
+    )
+    description = models.CharField(
+        max_length=120, blank=True,
+        help_text='Short line shopper see, for example "Welcome offer: 10% off your first order". Blank: the app writes one from the numbers.',
+    )
 
     class Meta:
         constraints = [

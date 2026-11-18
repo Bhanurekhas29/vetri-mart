@@ -145,6 +145,9 @@ def _build(lines, request, user=None):
             'low_stock': bool(buyable and 0 < v.stock <= LOW_STOCK_AT),
             'issue': issue,
             'price_dropped_from': money(line.price_when_added) if dropped else None,
+            # when it was put in the cart (guests' carts live on the phone and have no time): the app uses it for the
+            # "your cart is waiting" reminder
+            'added_at': line.added_at.isoformat() if getattr(line, 'added_at', None) else None,
         })
 
     settings = DeliverySetting.load()

@@ -43,8 +43,8 @@ class CouponAdmin(admin.ModelAdmin):
     """Coupon codes. A shopper can use each code once (cancelled orders do not count) and puts one coupon on an order.
     A percent coupon can have a cap (max discount); free delivery is judged before the coupon."""
 
-    list_display = ('code', 'kind', 'value', 'max_discount', 'min_order_amount', 'valid_from', 'valid_until', 'times_used', 'usage_limit', 'is_active')
-    list_filter = ('kind', 'is_active')
+    list_display = ('code', 'kind', 'value', 'max_discount', 'min_order_amount', 'valid_from', 'valid_until', 'times_used', 'usage_limit', 'show_in_app', 'is_active')
+    list_filter = ('kind', 'is_active', 'show_in_app')
     search_fields = ('code',)
 
     @admin.display(description='Times used')

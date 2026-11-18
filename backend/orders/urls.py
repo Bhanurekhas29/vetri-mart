@@ -7,6 +7,7 @@ urlpatterns = [
     path('cart/items/', views.CartItemsView.as_view()),
     path('cart/items/<int:item_id>/save/', views.CartItemSaveView.as_view()),
     path('cart/coupon/', views.CartCouponView.as_view()),
+    path('coupons/available/', views.AvailableCouponsView.as_view()),
     path('cart/preview/', views.GuestCartPreviewView.as_view()),
     path('cart/merge/', views.CartMergeView.as_view()),
     path('cart/items/<int:item_id>/', views.CartItemView.as_view()),
