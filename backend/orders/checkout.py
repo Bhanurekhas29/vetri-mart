@@ -19,6 +19,9 @@ from catalog.serializers import file_url, money
 from . import payments
 from .cart import build_cart, cart_queryset, delivery_fee_for, variant_picture
 from . import invoice
+from siteconfig.email_layout import branded_email
+
+from .emails import run_in_background
 from .models import REPLACED_NOTE, CartCoupon, CartItem, Coupon, Order, OrderItem, OrderStatusEvent, Payment, ServiceablePincode
 
 logger = logging.getLogger(__name__)
@@ -249,7 +252,7 @@ def confirm_payment(user, order_id, razorpay_order_id, razorpay_payment_id, sign
     order.record_status()
     CartItem.objects.filter(user=user, variant_id__in=[i.variant_id for i in items], saved_for_later=False).delete()
     CartCoupon.objects.filter(user=user).delete()  # the coupon was used by this order
-    transaction.on_commit(lambda: send_order_confirmation(order.pk))
+    transaction.on_commit(lambda: run_in_background(send_order_confirmation, order.pk))
     return order, 'confirmed'
 
 
@@ -259,16 +262,28 @@ def send_order_confirmation(order_id):
         order = Order.objects.select_related('user').get(pk=order_id)
         if not order.user.email_order_updates:
             return
-        lines = [f'  {i.quantity} x {i.product_name}' + (f' ({i.colour}{" / " + i.size if i.size else ""})' if i.colour or i.size else '') + f' - Rs {i.price * i.quantity:,.2f}' for i in order.items.all()]
+        items = list(order.items.all())
+        lines = [f'  {i.quantity} x {i.product_name}' + (f' ({i.colour}{" / " + i.size if i.size else ""})' if i.colour or i.size else '') + f' - Rs {i.price * i.quantity:,.2f}' for i in items]
         estimate = delivery_estimate(order.pincode)
+        where = f'{order.recipient_name}, {order.address_line1}, {order.city} {order.pincode}'
         body = (
             f'Hi {order.user.name},\n\nThank you for your order. We received your payment of Rs {order.total_amount:,.2f}.\n\n'
             f'Order number: {order.order_number}\n\nItems:\n' + '\n'.join(lines) + '\n\n'
-            f'Delivery to: {order.recipient_name}, {order.address_line1}, {order.city} {order.pincode}\n'
+            f'Delivery to: {where}\n'
             f'{estimate["message"] if estimate["deliverable"] else ""}\n\n'
             'You can follow your order in the Vetri Mart app under Orders.\n\nVetri Mart'
         )
-        send_mail(f'Order {order.order_number} confirmed', body, None, [order.user.email], fail_silently=False)
+        html = branded_email(
+            'Thank you for your order!',
+            [f'Hi {order.user.name}, we received your payment of Rs {order.total_amount:,.2f}.', f'Order number: {order.order_number}'],
+            table=[
+                (f'{i.quantity} x {i.product_name}' + (f' ({i.colour}{" / " + i.size if i.size else ""})' if i.colour or i.size else ''), f'Rs {i.price * i.quantity:,.2f}')
+                for i in items
+            ],
+            total=('Total paid', f'Rs {order.total_amount:,.2f}'),
+            note=f'Delivery to: {where}. {estimate["message"] if estimate["deliverable"] else ""} You can follow your order in the Vetri Mart app under Orders.'.replace('  ', ' '),
+        )
+        send_mail(f'Order {order.order_number} confirmed', body, None, [order.user.email], fail_silently=False, html_message=html)
     except Exception:
         logger.exception('Could not send the order confirmation email for order %s', order_id)
 

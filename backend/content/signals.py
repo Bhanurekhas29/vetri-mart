@@ -4,7 +4,7 @@ from django.db import transaction
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
-from orders.emails import send_refund_email, send_status_email
+from orders.emails import run_in_background, send_refund_email, send_status_email
 from orders.models import REPLACED_NOTE, OrderStatusEvent, Payment
 
 from .models import Notification
@@ -33,7 +33,7 @@ def notify_order_status(sender, instance, created, **kwargs):
         return  # pending payment: nothing to tell the customer yet
     Notification.objects.create(user=order.user, kind=Notification.Kind.ORDER, title=title, message=msg, order=order)
     if status in ('shipped', 'delivered', 'cancelled'):
-        transaction.on_commit(lambda: send_status_email(order.pk, status))  # the shopper's email setting is respected inside
+        transaction.on_commit(lambda: run_in_background(send_status_email, order.pk, status))  # the shopper's email setting is respected inside
 
 
 @receiver(pre_save, sender=Payment)
@@ -57,4 +57,4 @@ def notify_payment(sender, instance, created, **kwargs):
         return
     Notification.objects.create(user=order.user, kind=Notification.Kind.PAYMENT, title=title, message=msg, order=order)
     if instance.status == Payment.Status.REFUNDED:
-        transaction.on_commit(lambda: send_refund_email(instance.pk))
+        transaction.on_commit(lambda: run_in_background(send_refund_email, instance.pk))
