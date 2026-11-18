@@ -22,6 +22,8 @@ $secure = Read-Host 'Password' -AsSecureString
 $dbPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure))
 
 if (-not (Test-Path $ca)) { throw "The certificate file was not found: $ca" }
+Write-Host ("Password received: {0} characters (a pasted password shows only one star, that is normal)" -f $dbPassword.Length) -ForegroundColor Yellow
+if ($dbPassword.Length -lt 4) { throw 'The password looks too short, so the paste did not work. Run the script again and right-click to paste, or type the password.' }
 
 $env:DB_HOST = $dbHost
 $env:DB_PORT = $dbPort
